@@ -8,33 +8,46 @@ import {
 } from "../controllers/product.controller.js";
 
 import { validate } from "../middlewares/validation.middleware.js";
-import productSchemaValidation from "../validations/product.validation.js";
+import { 
+    createProductSchema, 
+    productIdSchema, 
+    productQuerySchema,
+    updateProductSchema 
+} from "../validations/product.validation.js";
+
 import { protect, restrictTo } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 router
     .route("/")
-    .get(getAllProducts)
+    .get(
+        validate(productQuerySchema), 
+        getAllProducts
+    )
     .post(
         protect,
         restrictTo("admin"),
-        validate(productSchemaValidation),
+        validate(createProductSchema), 
         createProduct
     );
 
 router
     .route("/:id")
-    .get(getProductById)
+    .get(
+        validate(productIdSchema), 
+        getProductById
+    )
     .put(
         protect,
         restrictTo("admin"),
-        validate(productSchemaValidation),
+        validate(updateProductSchema), 
         updateProduct
     )
     .delete(
         protect,
         restrictTo("admin"),
+        validate(productIdSchema), 
         deleteProduct
     );
 
