@@ -1,16 +1,16 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/user.model');
-const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
+    expiresIn: process.env.JWT_EXPIRE || '30d' 
   });
 };
 
+// @desc    Register user
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -18,19 +18,16 @@ const register = asyncHandler(async (req, res) => {
     throw new Error('User already exists');
   }
 
-  const hashedPassword = await argon2.hash(password);
-
   const user = await User.create({
     name,
     email,
-    password: hashedPassword
+    password,
+    role 
   });
-
-  const token = generateToken(user._id);
 
   res.status(201).json({
     success: true,
-    token,
+    token: generateToken(user._id),
     user: {
       id: user._id,
       name: user.name,
@@ -40,26 +37,20 @@ const register = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Login user
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email }).select('+password');
-  if (!user) {
+  
+  if (!user || !(await user.comparePassword(password))) {
     res.status(401);
-    throw new Error('Invalid credentials');
+    throw new Error('Invalid email or password');
   }
-
-  const isPasswordValid = await argon2.verify(user.password, password);
-  if (!isPasswordValid) {
-    res.status(401);
-    throw new Error('Invalid credentials');
-  }
-
-  const token = generateToken(user._id);
 
   res.status(200).json({
     success: true,
-    token,
+    token: generateToken(user._id),
     user: {
       id: user._id,
       name: user.name,
@@ -69,6 +60,7 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get current user profile
 const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
   res.status(200).json({
@@ -77,8 +69,4 @@ const getMe = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = {
-  register,
-  login,
-  getMe
-};
+module.exports = { register, login, getMe };

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const argon2 = require('argon2'); // نقلنا الاستيراد إلى هنا
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -26,11 +27,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  }
+}, { timestamps: true });
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  try {
+    this.password = await argon2.hash(this.password);
+    next();
+  } catch (err) {
+    next(err);
   }
 });
+
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await argon2.verify(this.password, enteredPassword);
+};
 
 module.exports = mongoose.model('User', userSchema);
