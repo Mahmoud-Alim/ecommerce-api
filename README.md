@@ -1,27 +1,38 @@
-# Secure E-Commerce API
+# Test API
 
-A comprehensive backend system for a minimalist e-commerce platform built with Node.js, Express, and MongoDB. This system provides robust route protection and granular access control for users and administrators.
+Express.js API with MongoDB, JWT authentication, and product management.
 
-## Key Features
-* Authentication System: User registration and login functionality using JSON Web Tokens (JWT).
-* Data Security: Password encryption using the bcryptjs library.
-* Route Protection: Middleware-based security to prevent unauthorized access to sensitive endpoints.
-* Role-Based Access Control (RBAC): Distinct permissions for standard Users and Administrators.
-* Product Management (CRUD): Complete functionality to Create, Read, Update, and Delete products.
-* Data Validation: Integration with the Joi library to ensure the integrity of incoming request data.
-* Advanced Security Middlewares: Implementation of Helmet, CORS, Mongo-Sanitize, and Rate-Limiting to mitigate common web vulnerabilities.
+## Features
 
-## Technology Stack
-* Runtime Environment: Node.js
-* Web Framework: Express.js
-* Database: MongoDB (Object Modeling via Mongoose)
-* Security: JSON Web Tokens (JWT), Bcrypt.js
-* Validation: Joi
+- User registration & login (argon2 password hashing)
+- JWT authentication
+- Product CRUD operations
+- Input validation with Zod
+- Security: Helmet, CORS, rate limiting, XSS sanitization, mongo-sanitize, HPP
+- Error handling middleware
 
-## Installation and Setup
+## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/Mahmoud
-/ecommerce-api.git](https://github.com/Mahmoud
-/ecommerce-api.git)
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Copy `.env.example` to `.env` and update variables
+4. Run MongoDB locally or provide a remote URI
+5. Start the server: `npm run dev`
+
+## API Endpoints
+
+### Auth
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `GET /api/auth/me` - Get current user (protected)
+
+### Products
+- `GET /api/products` - Get all products (public)
+- `GET /api/products/:id` - Get single product (public)
+- `POST /api/products` - Create product (protected)
+- `PUT /api/products/:id` - Update product (protected, owner or admin)
+- `DELETE /api/products/:id` - Delete product (protected, owner or admin)
+
+## Environment Variables
+
+See `.env.example`
