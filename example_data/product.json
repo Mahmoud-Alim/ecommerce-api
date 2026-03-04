@@ -1,0 +1,17 @@
+{
+  "name": "iPhone 15 Pro",
+  "description": "Smartphone with advanced features",
+  "richDescription": "Latest Apple iPhone with A17 chip, titanium body, and improved camera system.",
+  "image": "https://example.com/images/iphone15.jpg",
+  "images": [
+    "https://example.com/images/iphone15-front.jpg",
+    "https://example.com/images/iphone15-back.jpg"
+  ],
+  "brand": "Apple",
+  "price": 1199,
+  "category": "65f1a2b3c4d5e6f789012345",
+  "countInStock": 50,
+  "rating": 4.8,
+  "isFeatured": true,
+  "dateCreated": "2026-03-04T00:00:00Z"
+}

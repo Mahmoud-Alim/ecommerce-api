@@ -1,0 +1,12 @@
+{
+  "name": "Ahmed Mohamed",
+  "email": "ahmed.mohamed@example.com",
+  "passwordHash": "$2b$10$abcdefgHashedPasswordExample",
+  "street": "El Tahrir Street",
+  "apartment": "12B",
+  "city": "Cairo",
+  "zip": "11511",
+  "country": "Egypt",
+  "phone": "+201234567890",
+  "isAdmin": true
+}

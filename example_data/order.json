@@ -1,0 +1,16 @@
+{
+  "orderItems": [
+    "65f1a2b3c4d5e6f789012346",
+    "65f1a2b3c4d5e6f789012347"
+  ],
+  "shippingAddress1": "El Nasr Street",
+  "shippingAddress2": "Apartment 5",
+  "city": "Giza",
+  "zip": "12511",
+  "country": "Egypt",
+  "phone": "+201098765432",
+  "status": "Pending",
+  "totalPrice": 2398,
+  "user": "65f1a2b3c4d5e6f789012348",
+  "dateOrdered": "2026-03-04T00:00:00Z"
+}

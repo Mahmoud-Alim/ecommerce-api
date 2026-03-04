@@ -1,16 +1,17 @@
 {
-  "name": "test-api",
+  "name": "e-commerce-api",
   "version": "1.0.0",
   "description": "Express API with MongoDB",
   "main": "app.js",
+  "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=production node app.js",
-    "dev": "cross-env NODE_ENV=development nodemon app.js"
+    "dev": "cross-env NODE_ENV=development node --watch app.js"
   },
   "dependencies": {
     "argon2": "^0.44.0",
     "compression": "^1.8.1",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "express": "^4.22.1",
