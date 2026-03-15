@@ -20,17 +20,17 @@ A production-ready RESTful API for e-commerce applications built with Express.js
 
 ```
 ├── controllers/       # Request handlers
+├── models/            # Mongoose models (schemas)
 ├── routes/            # API route definitions
 ├── services/          # Business logic
 ├── middlewares/       # Express middleware (auth, validation, upload, etc.)
 ├── validations/       # Zod validation schemas
 ├── helpers/           # Utility functions (JWT)
 ├── utils/             # App utilities (logger, API response, errors)
-├── public/uploads/   # Uploaded product images
+├── public/uploads/    # Uploaded product images
 ├── logs/              # Application logs
-├── scripts/           # Utility scripts
-├── example_data/      # Sample data for testing
-└── app.js             # Application entry point
+├── app.js             # Application entry point
+└── server.js          # Server startup and database connection
 ```
 
 ## Installation
@@ -44,9 +44,18 @@ A production-ready RESTful API for e-commerce applications built with Express.js
    - `PORT` - Server port (default: 5000)
    - `NODE_ENV` - development or production
 4. Run MongoDB locally or provide a remote URI
-5. Start the server: `npm run dev` (development) or `npm start` (production)
+5. Start the server:
+   - `npm run dev` - Development mode with auto-reload
+   - `npm start` - Production mode
+   - `npm run dev:all` - Run both server and client (if available)
 
 ## API Endpoints
+
+### System
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/api/v1/health` | Health check | Authenticated |
+| GET | `/api/v1/home` | Home status | Public |
 
 ### Users & Authentication
 | Method | Endpoint | Description | Access |
@@ -98,11 +107,6 @@ A production-ready RESTful API for e-commerce applications built with Express.js
 | GET | `/api/v1/orderitems` | Get all order items | Admin |
 | POST | `/api/v1/orderitems` | Create order item | Admin |
 
-### System
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| GET | `/health` | Health check | Public |
-
 ## Environment Variables
 
 ```env
@@ -123,6 +127,19 @@ PORT=5000
 - **Security**: Helmet, CORS, express-rate-limit, express-xss-sanitizer, express-mongo-sanitize, HPP
 - **Logging**: Morgan, Winston
 - **File Upload**: Multer
+- **Testing**: Vitest, Supertest, MongoDB Memory Server
+
+## Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Watch mode:
+```bash
+npm run test:watch
+```
 
 ## License
 
