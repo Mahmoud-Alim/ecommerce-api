@@ -19,10 +19,9 @@ function authJwt() {
       "/api/v1/csrf-token",
       { url: /\/api\/v1\/products(.*)/, methods: ["GET", "OPTIONS"] },
       { url: /\/api\/v1\/categories(.*)/, methods: ["GET", "OPTIONS"] },
-      "/health",
+      "/api/v1/health",
     ],
   });
-}
 }
 
 export default authJwt;

@@ -23,8 +23,8 @@ router.get("/:id", validateProductId, getProductById);
 
 router.post(
   "/",
-  upload.array("images", 10),
   requireAdmin,
+  upload.array("images", 10),
   validateRequest(productSchema),
   validateCategoryExists,
   createProduct
@@ -32,8 +32,8 @@ router.post(
 router.put(
   "/:id",
   validateProductId,
-  upload.array("images", 10),
   requireAdmin,
+  upload.array("images", 10),
   validateRequest(updateProductSchema),
   validateCategoryExists,
   updateProduct

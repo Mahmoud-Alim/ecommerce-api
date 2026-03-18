@@ -3,6 +3,17 @@ import mongoose from "mongoose";
 import app from "./app.js";
 import logger from "./utils/logger.js";
 
+// Fail fast if required production environment variables are missing
+const requiredInProd = ["MONGO_URI", "JWT_SECRET", "SESSION_SECRET", "COOKIE_PARSER_SECRET"];
+if (process.env.NODE_ENV === "production") {
+  for (const key of requiredInProd) {
+    if (!process.env[key]) {
+      logger.error(`Missing required environment variable: ${key}`);
+      process.exit(1);
+    }
+  }
+}
+
 mongoose
   .connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 5000,

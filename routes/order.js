@@ -13,6 +13,7 @@ import { validateOrderId, validateUserId } from "../middlewares/validationMiddle
 import { requireAdmin } from "../middlewares/adminMiddleware.js";
 import validateRequest from "../middlewares/validateRequest.js";
 import { orderSchema, updateOrderStatusSchema } from "../validations/orderValidation.js";
+import { requireOrderOwnerOrAdmin, requireSelfOrAdmin } from "../middlewares/authorization.js";
 
 const router = express.Router();
 
@@ -22,8 +23,8 @@ router.get("/count", requireAdmin, getOrderCount);
 router.put("/:id", requireAdmin, validateOrderId, validateRequest(updateOrderStatusSchema), updateOrder);
 router.delete("/:id", requireAdmin, validateOrderId, deleteOrder);
 
-router.get("/user-orders/:userId", validateUserId, getUserOrders);
-router.get("/:id", validateOrderId, getOrderById);
+router.get("/user-orders/:userId", validateUserId, requireSelfOrAdmin, getUserOrders);
+router.get("/:id", validateOrderId, requireOrderOwnerOrAdmin, getOrderById);
 router.post("/", validateRequest(orderSchema), createOrder);
 
 export default router;

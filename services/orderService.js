@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Order from "../models/order.js";
 import OrderItem from "../models/order-item.js";
 import Product from "../models/product.js";
@@ -72,36 +73,137 @@ export const createOrder = async (orderData, userId) => {
     throw new AppError("Missing required shipping fields: shippingAddress1, city, zip, country, phone", 400);
   }
 
-  const productIds = orderItems.map((item) => item.product);
-  const products = await Product.find({ _id: { $in: productIds } }).select("price");
-  const priceMap = Object.fromEntries(products.map((p) => [p._id.toString(), p.price]));
+  // Consolidate quantities per product
+  const requiredQuantities = orderItems.reduce((acc, item) => {
+    const pid = String(item.product);
+    const qty = Number(item.quantity) || 0;
+    acc[pid] = (acc[pid] || 0) + qty;
+    return acc;
+  }, {});
 
-  const totalPrice = orderItems.reduce((sum, item) => {
-    const price = priceMap[item.product] ?? 0;
-    return sum + price * item.quantity;
-  }, 0);
+  const productIds = Object.keys(requiredQuantities);
+  const products = await Product.find({ _id: { $in: productIds } }).select("price countInStock").lean();
 
-  const savedItems = await Promise.all(
-    orderItems.map((item) =>
-      OrderItem.create({ quantity: item.quantity, product: item.product })
-    )
-  );
-  const orderItemsIds = savedItems.map((i) => i._id);
+  if (products.length !== productIds.length) {
+    throw new AppError("One or more products not found", 400);
+  }
 
-  const order = await Order.create({
-    orderItems: orderItemsIds,
-    shippingAddress1,
-    shippingAddress2,
-    city,
-    zip,
-    country,
-    phone,
-    status: status || "Pending",
-    totalPrice,
-    user: userId,
-  });
+  const priceMap = Object.fromEntries(products.map((p) => [String(p._id), p.price]));
 
-  return order;
+  // Attempt to use transactions; if not supported (e.g., standalone mongod), fallback to safe compensation approach
+  let session;
+  try {
+    session = await mongoose.startSession();
+    session.startTransaction();
+
+    // Atomically decrement stock for each product within transaction
+    for (const pid of productIds) {
+      const reqQty = requiredQuantities[pid];
+      const updated = await Product.findOneAndUpdate(
+        { _id: pid, countInStock: { $gte: reqQty } },
+        { $inc: { countInStock: -reqQty } },
+        { new: true, session }
+      );
+      if (!updated) {
+        throw new AppError(`Insufficient stock for product ${pid}`, 400);
+      }
+    }
+
+    const createdItems = await OrderItem.insertMany(
+      orderItems.map((item) => ({ quantity: item.quantity, product: item.product })),
+      { session }
+    );
+    const orderItemsIds = createdItems.map((i) => i._id);
+
+    const totalPrice = orderItems.reduce((sum, item) => {
+      const price = priceMap[String(item.product)] ?? 0;
+      return sum + price * item.quantity;
+    }, 0);
+
+    const [order] = await Order.create(
+      [{
+        orderItems: orderItemsIds,
+        shippingAddress1,
+        shippingAddress2,
+        city,
+        zip,
+        country,
+        phone,
+        status: status || "Pending",
+        totalPrice,
+        user: userId,
+      }],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+    return order;
+  } catch (err) {
+    // If transactions are not supported by the server, fallback to compensation logic
+    const msg = err && err.message ? String(err.message) : "";
+    if (msg.includes("Transaction numbers are only allowed")) {
+      if (session) {
+        try { await session.abortTransaction(); } catch (_) {}
+        session.endSession();
+      }
+
+      // Fallback: perform per-product atomic decrements and compensate on failure
+      const compensated = [];
+      try {
+        for (const pid of productIds) {
+          const reqQty = requiredQuantities[pid];
+          const updated = await Product.findOneAndUpdate(
+            { _id: pid, countInStock: { $gte: reqQty } },
+            { $inc: { countInStock: -reqQty } },
+            { new: true }
+          );
+          if (!updated) {
+            // rollback previous updates
+            for (const u of compensated) {
+              await Product.findByIdAndUpdate(u.pid, { $inc: { countInStock: u.qty } });
+            }
+            throw new AppError(`Insufficient stock for product ${pid}`, 400);
+          }
+          compensated.push({ pid, qty: reqQty });
+        }
+
+        // create order items and order (no session)
+        const createdItems = await OrderItem.insertMany(
+          orderItems.map((item) => ({ quantity: item.quantity, product: item.product }))
+        );
+        const orderItemsIds = createdItems.map((i) => i._id);
+
+        const totalPrice = orderItems.reduce((sum, item) => {
+          const price = priceMap[String(item.product)] ?? 0;
+          return sum + price * item.quantity;
+        }, 0);
+
+        const order = await Order.create({
+          orderItems: orderItemsIds,
+          shippingAddress1,
+          shippingAddress2,
+          city,
+          zip,
+          country,
+          phone,
+          status: status || "Pending",
+          totalPrice,
+          user: userId,
+        });
+
+        return order;
+      } catch (err2) {
+        throw err2;
+      }
+    }
+
+    if (session) {
+      try { await session.abortTransaction(); } catch (_) {}
+      session.endSession();
+    }
+    throw err;
+  }
 };
 
 export const updateOrder = async (id, status) => {

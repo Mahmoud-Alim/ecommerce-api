@@ -17,9 +17,6 @@ export const getAllProducts = async (categoryId) => {
     .populate("category", "name color icon")
     .select("name price image category isFeatured brand");
 
-  if (!products || products.length === 0) {
-    throw new AppError("No products found", 404);
-  }
   return products;
 };
 
